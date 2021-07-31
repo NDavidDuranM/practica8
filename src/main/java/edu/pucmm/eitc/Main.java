@@ -2,36 +2,56 @@ package edu.pucmm.eitc;
 
 import kong.unirest.GenericType;
 import kong.unirest.HttpResponse;
+import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 
 import java.util.List;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hola Unirest");
 
-        HttpResponse<String> response = Unirest.get("http://localhost:7000/")
-                .header("accept", "application/json")
-                .queryString("apiKey", "123")
-                .asString();
-        System.out.println("El codigo de respuesta es: " + response.getStatus());
-        System.out.println("El mensaje: " + response.getBody());
+        //Estudiante de prueba:
+        int matricula = 20171056;
+        String nombre = "Nelson";
+        String carrera = "ISC";
 
-        HttpResponse<List<Estudiante>> estudianteHttpResponse = Unirest.get("http://localhost:7000/api/estudiante/")
+        System.out.println("\nLista de estudiantes:\n");
+
+        HttpResponse<List<Estudiante>> listaEstudiante = Unirest.get("http://localhost:7000/api/estudiante/")
                 .header("accept", "application/json")
                 .queryString("apiKey", "123")
                 .asObject(new GenericType<List<Estudiante>>() {});
-        System.out.println("El codigo de respuesta es: " + estudianteHttpResponse.getStatus());
-        System.out.println("El mensaje: " + estudianteHttpResponse.getBody().toString());
+        System.out.println("Respuesta: "+ listaEstudiante.getStatus());
+        System.out.println("Mensaje: "+ listaEstudiante.getBody().toString());
+
+        System.out.println("\nCreacion del estudiante:\n");
+
+        HttpResponse<JsonNode> crearEstudiante = Unirest.post("http://localhost:7000/api/estudiante/")
+                .header("accept", "application/json")
+                .queryString("apiKey", "123")
+                .body(new Estudiante(matricula, nombre, carrera))
+                .asJson();
+        System.out.println("Respuesta: " + crearEstudiante.getStatus());
+        System.out.println("Mensaje: " + crearEstudiante.getBody().toString());
+
+        System.out.println("\nConsulta del estudiante:\n");
+
+        Estudiante consultarEstudiante = Unirest.get("http://localhost:7000/api/estudiante/" + matricula)
+                .asObject(Estudiante.class)
+                .getBody();
+        System.out.println("Matricula = " + consultarEstudiante.getMatricula() + ", Nombre = " + consultarEstudiante.getNombre() + ", Carrera = " + consultarEstudiante.getCarrera());
+
+        System.out.println("\nEliminacion del estudiante:\n");
+
+        HttpResponse deleteEstudiante = Unirest.delete("http://localhost:7000/api/estudiante/" + matricula).asEmpty();
+        System.out.println("Respuesta: " + deleteEstudiante.getStatus());
     }
 
-    class Estudiante {
+    static class Estudiante {
         private int matricula;
         private String nombre;
         private String carrera;
-
-        public Estudiante() {
-        }
 
         public Estudiante(int matricula, String nombre, String carrera) {
             this.matricula = matricula;
@@ -70,7 +90,6 @@ public class Main {
                     ", nombre='" + nombre + '\'' +
                     ", carrera='" + carrera + '\'' +
                     '}';
-
         }
     }
 }
